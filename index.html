@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聖經知識百萬富翁</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: radial-gradient(circle at center, #000b58 0%, #000000 80%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 經典電視效果 */
+        .tv-shape {
+            position: relative;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            border: 2px solid #8e9eab;
+            border-radius: 40px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .option-box {
+            position: relative; width: 100%; min-height: 60px;
+            background: linear-gradient(90deg, #000 0%, #0a0a2a 50%, #000 100%);
+            border: 2px solid #6b7280; border-radius: 30px;
+            color: white; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; padding: 0 20px;
+        }
+
+        .option-box:hover:not(:disabled) { background: #d97706; border-color: #fbbf24; color: #000; font-weight: bold; }
+        .option-box.selected { background: #d97706; border-color: #fbbf24; color: #000; }
+        .option-box.correct { background: #065f46 !important; border-color: #34d399 !important; color: #fff !important; animation: flashGreen 0.5s infinite alternate; }
+        .option-box.wrong { background: #7f1d1d !important; border-color: #ef4444 !important; }
+        .option-box.eliminated { opacity: 0.1; pointer-events: none; border-color: transparent; }
+        @keyframes flashGreen { from { background: #065f46; } to { background: #047857; } }
+
+        /* 錦囊 */
+        .lifeline-icon {
+            width: 60px; height: 40px; border-radius: 50%; border: 2px solid #8ec5fc;
+            background: radial-gradient(circle, #000b58 0%, #000 100%); color: #8ec5fc;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .lifeline-icon:hover:not(.used) { background: #8ec5fc; color: #000; box-shadow: 0 0 15px rgba(142, 197, 252, 0.8); }
+        .lifeline-icon.used { opacity: 0.3; cursor: default; border-color: #4b5563; position: relative; }
+        .lifeline-icon.used::after { content: 'X'; color: #ef4444; position: absolute; font-size: 24px; font-weight: bold; }
+
+        /* 模式選擇按鈕 */
+        .mode-btn {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 2px solid #475569;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .mode-btn:hover {
+            border-color: #d4af37;
+            background: #1e3a8a;
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* 獎金樹 */
+        .money-tree-item {
+            display: flex; justify-content: space-between; padding: 2px 10px;
+            color: #d1d5db; font-family: sans-serif; font-size: 0.85rem;
+        }
+        .money-tree-item.active { background: #d97706; color: black; border-radius: 4px; font-weight: bold; }
+        .money-tree-item.milestone { color: #fff; }
+
+        /* 觀眾圖表 */
+        .chart-bar-container { display: flex; align-items: flex-end; justify-content: center; height: 120px; gap: 10px; border-bottom: 2px solid #fff; }
+        .chart-bar { width: 30px; background: #3b82f6; position: relative; transition: height 1s; }
+        .chart-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: #d4af37; }
+
+        .professor-bubble { background: #f8fafc; color: #1e293b; padding: 15px; border-radius: 12px; position: relative; border-left: 5px solid #d4af37; }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+
+    <div class="w-full max-w-7xl mx-auto p-4 flex flex-col lg:flex-row h-full gap-4">
+        
+        <!-- 主遊戲區 -->
+        <div class="flex-grow flex flex-col justify-between h-full relative">
+            
+            <!-- 頂部資訊 -->
+            <div class="flex justify-between items-start mb-4">
+                <div class="hidden md:block w-[120px]"></div>
+                <div class="text-center z-10">
+                    <div class="text-3xl font-bold text-[#d4af37] tracking-widest" style="text-shadow: 2px 2px 4px black;">BIBLE</div>
+                    <div class="text-xs text-white tracking-[0.3em]">MILLIONAIRE</div>
+                </div>
+                <div class="flex gap-2 z-10">
+                    <button id="life-5050" onclick="useLifeline('5050')" class="lifeline-icon">50:50</button>
+                    <button id="life-phone" onclick="useLifeline('phone')" class="lifeline-icon">☎</button>
+                    <button id="life-audience" onclick="useLifeline('audience')" class="lifeline-icon">👥</button>
+                </div>
+            </div>
+
+            <!-- 主題選擇畫面 -->
+            <div id="selection-screen" class="absolute inset-0 flex flex-col items-center justify-center z-30 bg-black/95 rounded-xl p-8 overflow-y-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#d4af37] mb-8 tracking-wider">請選擇挑戰主題</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+                    <button onclick="startGame('mark')" class="mode-btn">馬可福音</button>
+                    <button onclick="startGame('gospels')" class="mode-btn">四福音</button>
+                    <button onclick="startGame('samuel')" class="mode-btn">撒母耳記上下</button>
+                    <button onclick="startGame('pentateuch')" class="mode-btn">摩西五經</button>
+                    <button onclick="startGame('nt')" class="mode-btn">新約全書</button>
+                    <button onclick="startGame('ot')" class="mode-btn">舊約全書</button>
+                    <button onclick="startGame('comprehensive')" class="mode-btn md:col-span-2 border-[#d4af37] bg-blue-900/30">綜合（學術挑戰版）</button>
+                </div>
+                <p class="mt-6 text-slate-400 text-sm">* 綜合主題包含高階學術研究題目</p>
+            </div>
+
+            <!-- 遊戲區 -->
+            <div id="game-area" class="hidden flex flex-col items-center w-full mt-auto mb-10">
+                <div class="w-full max-w-4xl mb-8">
+                    <div class="tv-shape p-8 min-h-[160px]">
+                        <div class="w-full">
+                            <div class="text-[10px] text-yellow-500 uppercase tracking-widest mb-2 border-b border-white/10 pb-1 inline-block" id="q-category"></div>
+                            <h2 id="question-text" class="text-xl md:text-2xl font-bold text-white leading-relaxed"></h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-4xl" id="options-container"></div>
+
+                <div class="mt-6 h-8 text-center w-full">
+                    <p id="feedback-area" class="text-[#d4af37] font-bold text-lg opacity-0 transition-opacity"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右側：獎金階梯 -->
+        <div class="lg:w-64 w-full flex-shrink-0">
+            <div class="bg-black/60 border-2 border-[#6b7280] rounded-xl p-4 h-full flex flex-col justify-center">
+                <div id="ladder-list" class="flex flex-col-reverse w-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 結算彈窗 -->
+    <div id="overlay" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-6">
+        <div class="bg-gradient-to-b from-[#0f0c29] to-[#302b63] border-2 border-[#d4af37] p-10 rounded-3xl max-w-md w-full text-center">
+            <h2 id="modal-title" class="text-3xl font-bold mb-4 text-[#d4af37]"></h2>
+            <p id="modal-msg" class="text-white mb-8"></p>
+            <div class="bg-black/40 p-6 rounded-xl mb-8 border border-white/10">
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Total Prize</p>
+                <p id="modal-prize" class="text-4xl font-black text-white"></p>
+            </div>
+            <button onclick="location.reload()" class="w-full py-4 bg-[#d4af37] text-black font-bold rounded-full hover:bg-yellow-400 transition-all">返回主選單</button>
+        </div>
+    </div>
+
+    <!-- 錦囊 Modal -->
+    <div id="lifeline-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[150] p-4">
+        <div class="bg-[#0f172a] border-2 border-[#8ec5fc] p-8 rounded-2xl max-w-lg w-full relative">
+            <h3 id="lifeline-title" class="text-2xl font-bold text-[#8ec5fc] mb-6"></h3>
+            <div id="lifeline-content" class="text-white text-lg"></div>
+            <button onclick="closeLifelineModal()" class="mt-8 w-full py-2 bg-[#8ec5fc] text-black font-bold rounded hover:bg-white transition-colors">收到</button>
+        </div>
+    </div>
+
+    <script>
+        const prizes = [1000, 2000, 4000, 6000, 8000, 10000, 20000, 50000, 100000, 200000, 250000, 400000, 600000, 800000, 1000000];
+        
+        // 題庫設計：A-F 為純經文內容，G 為綜合（前10題基礎，後5題學術）
+        // 每個分類提供範例題庫，實際運作會隨機抽取
+        const banks = {
+            mark: [ 
+                {q: "馬可福音開始時，引用了哪位先知的話？", a: ["以賽亞", "耶利米", "以西結", "但以理"], h: "經文說：正如先知...書上記載。"},
+                {q: "耶穌在約旦河受洗時，聖靈彷彿什麼降在他身上？", a: ["鴿子", "火焰", "雲彩", "風"], h: "這是一種溫馴的鳥類。"},
+                {q: "耶穌呼召的第一批門徒是在做什麼的？", a: ["漁夫", "稅吏", "木匠", "農夫"], h: "他們在加利利海邊。"},
+                {q: "耶穌治好了西門岳母的什麼病？", a: ["熱病", "大痲瘋", "癱瘓", "血漏"], h: "耶穌進前拉著她的手，扶她起來。"},
+                {q: "誰在十字架下說：「這人真是神的兒子！」？", a: ["百夫長", "彼拉多", "彼得", "馬利亞"], h: "這是一位羅馬軍官。"},
+                {q: "耶穌平靜風浪時說了什麼？", a: ["住了吧！靜了吧！", "要有光！", "信的人有福了！", "我是神的兒子！"], h: "風就止住，大大平靜了。"},
+                {q: "在變化山上，哪兩位先知顯現與耶穌說話？", a: ["摩西和以利亞", "亞伯拉罕和以撒", "大衛和所羅門", "以賽亞和耶利米"], h: "代表律法和先知。"},
+                {q: "耶穌騎什麼牲畜進入耶路撒冷？", a: ["驢駒", "戰馬", "駱駝", "牛"], h: "從來沒有人騎過的。"},
+                {q: "誰出賣了耶穌？", a: ["加略人猶大", "彼得", "多馬", "彼拉多"], h: "他領了祭司長的銀錢。"},
+                {q: "馬可福音中，耶穌復活後首先向誰顯現？", a: ["抹大拉的馬利亞", "彼得", "雅各", "多馬"], h: "就是耶穌從她身上趕出七個鬼的。"}
+            ],
+            gospels: [
+                {q: "哪一卷福音書記載了「登山寶訓」？", a: ["馬太福音", "馬可福音", "路加福音", "約翰福音"], h: "包含八福的教導。"},
+                {q: "耶穌行的第一個神蹟是什麼？", a: ["水變酒", "五餅二魚", "醫治瞎子", "趕鬼"], h: "發生在迦拿的婚宴上。"},
+                {q: "「浪子回頭」的比喻記載在哪卷書？", a: ["路加福音", "馬太福音", "馬可福音", "約翰福音"], h: "這卷書記載了許多獨有的比喻。"},
+                {q: "哪卷福音書以「太初有道」開始？", a: ["約翰福音", "路加福音", "馬太福音", "馬可福音"], h: "強調耶穌的神性。"},
+                {q: "耶穌復活拉撒路是在哪個村莊？", a: ["伯大尼", "伯利恆", "拿撒勒", "迦百農"], h: "離耶路撒冷不遠。"},
+                {q: "誰爬上桑樹要看耶穌？", a: ["撒該", "尼哥底母", "巴底買", "拉撒路"], h: "他是個稅吏長，身量矮小。"},
+                {q: "耶穌說：「我是...」的好牧人。", a: ["羊", "門", "道路", "光"], h: "好牧人為羊捨命。"},
+                {q: "誰在夜裡來見耶穌，談論重生的道理？", a: ["尼哥底母", "亞利馬太的約瑟", "迦瑪列", "該亞法"], h: "他是法利賽人，猶太人的官。"},
+                {q: "彼得在哪裡三次不認主？", a: ["大祭司的院子", "客西馬尼園", "聖殿", "彼拉多的衙門"], h: "雞叫以先。"},
+                {q: "耶穌復活後在提比哩亞海邊為門徒預備了什麼？", a: ["早飯（魚和餅）", "最後的晚餐", "聖餐", "洗腳"], h: "當時門徒打了一夜的魚卻無所獲。"}
+            ],
+            samuel: [
+                {q: "撒母耳的母親是誰？", a: ["哈拿", "毗尼拿", "路得", "拿俄米"], h: "她在示羅痛哭祈禱。"},
+                {q: "以色列第一位君王是誰？", a: ["掃羅", "大衛", "所羅門", "撒母耳"], h: "他是便雅憫支派的人，比眾民高過一頭。"},
+                {q: "大衛用什麼殺死歌利亞？", a: ["機弦甩石", "刀劍", "弓箭", "長槍"], h: "他從溪中挑選了五塊光滑石子。"},
+                {q: "大衛的好朋友，掃羅的兒子是誰？", a: ["約拿單", "押尼珥", "米非波設", "伊施波設"], h: "他們的心深相契合。"},
+                {q: "大衛在哪個城市作王七年半？", a: ["希伯崙", "耶路撒冷", "伯利恆", "吉甲"], h: "這是猶大支派的主要城市。"},
+                {q: "誰因伸手扶住約櫃而被擊殺？", a: ["烏撒", "亞希約", "亞比拿達", "俄別以東"], h: "因為牛失前蹄。"},
+                {q: "大衛犯姦淫後，哪位先知來指責他？", a: ["拿單", "迦得", "撒母耳", "亞希雅"], h: "他講了一個富戶搶奪窮人羊羔的故事。"},
+                {q: "大衛的哪個兒子叛變，在城門口暗奪人心？", a: ["押沙龍", "暗嫩", "亞多尼雅", "所羅門"], h: "他以頭髮俊美著稱。"},
+                {q: "掃羅王最後是在哪裡陣亡的？", a: ["基利波山", "迦密山", "錫安山", "橄欖山"], h: "他與三個兒子同一天戰死。"},
+                {q: "大衛想為神建造什麼，但神不允許？", a: ["聖殿", "王宮", "城牆", "祭壇"], h: "神說他流了多人的血。"}
+            ],
+            pentateuch: [
+                {q: "神用幾天創造天地？", a: ["六天", "七天", "三天", "四十天"], h: "第七天安息。"},
+                {q: "誰造了方舟？", a: ["挪亞", "亞伯拉罕", "摩西", "以諾"], h: "為了躲避洪水。"},
+                {q: "神應許誰的子孫多如天上的星？", a: ["亞伯拉罕", "以撒", "雅各", "約瑟"], h: "他是信心之父。"},
+                {q: "誰被哥哥們賣到了埃及？", a: ["約瑟", "便雅憫", "猶大", "流便"], h: "他後來成為埃及宰相。"},
+                {q: "摩西在哪裡看見燒著的荊棘？", a: ["何烈山", "西奈山", "尼波山", "亞拉臘山"], h: "那是神的山。"},
+                {q: "以色列人出埃及前吃了什麼筵席？", a: ["逾越節", "住棚節", "五旬節", "普珥節"], h: "羊羔的血塗在門框上。"},
+                {q: "誰在西奈山領受十誡？", a: ["摩西", "亞倫", "約書亞", "迦勒"], h: "他在山上四十晝夜。"},
+                {q: "亞倫造了什麼偶像讓百姓陷在罪裡？", a: ["金牛犢", "巴力", "亞舍拉", "銅蛇"], h: "用百姓的金環鑄造的。"},
+                {q: "誰的驢子開口說話？", a: ["巴蘭", "巴勒", "可拉", "拿答"], h: "他本想咒詛以色列人。"},
+                {q: "摩西死在哪座山上？", a: ["尼波山", "西奈山", "何烈山", "橄欖山"], h: "他遠遠觀看應許之地卻不得進去。"}
+            ],
+            nt: [
+                {q: "新約聖經第一卷書是？", a: ["馬太福音", "馬可福音", "創世記", "啟示錄"], h: "記載耶穌的家譜。"},
+                {q: "使徒行傳的作者是誰？", a: ["路加", "彼得", "保羅", "約翰"], h: "他也是醫生的身分。"},
+                {q: "保羅在哪裡看見大光而悔改？", a: ["大馬士革路上", "耶路撒冷", "安提阿", "羅馬"], h: "他原本要去捉拿基督徒。"},
+                {q: "「愛的篇章」在哪卷書？", a: ["哥林多前書13章", "羅馬書8章", "約翰一書4章", "以弗所書2章"], h: "愛是恆久忍耐，又有恩慈。"},
+                {q: "誰是第一位外邦人信徒（百夫長）？", a: ["哥尼流", "呂底亞", "獄卒", "提阿非羅"], h: "彼得在他家裡講道。"},
+                {q: "聖靈果子的第一個特質是什麼？", a: ["仁愛", "喜樂", "和平", "忍耐"], h: "加拉太書5章。"},
+                {q: "啟示錄是誰寫的？", a: ["約翰", "保羅", "彼得", "雅各"], h: "他在拔摩海島上。"},
+                {q: "耶穌說：「你們是世上的...」？", a: ["鹽和光", "金和銀", "水和火", "雲和雨"], h: "登山寶訓的教導。"},
+                {q: "保羅書信中，哪一卷被稱為「喜樂的書信」？", a: ["腓立比書", "加拉太書", "羅馬書", "歌羅西書"], h: "他在監獄中寫的。"},
+                {q: "新約最後一個字是什麼？", a: ["阿們", "耶穌", "聖徒", "恩典"], h: "願主耶穌的恩惠常與眾聖徒同在。"}
+            ],
+            ot: [
+                {q: "舊約第一卷書是？", a: ["創世記", "出埃及記", "馬太福音", "詩篇"], h: "起初神創造天地。"},
+                {q: "誰被稱為「合神心意的人」？", a: ["大衛", "掃羅", "所羅門", "撒母耳"], h: "他是耶西的兒子。"},
+                {q: "誰被大魚吞入腹中三天三夜？", a: ["約拿", "挪亞", "摩西", "彼得"], h: "他逃避神的呼召不去尼尼微。"},
+                {q: "誰是智慧之王，寫了箴言？", a: ["所羅門", "大衛", "摩西", "以賽亞"], h: "他求智慧不求壽命。"},
+                {q: "以利亞乘什麼升天？", a: ["旋風", "火車火馬", "雲彩", "天使"], h: "他的徒弟以利沙看見了。"},
+                {q: "誰在獅子坑中毫髮無傷？", a: ["但以理", "沙得拉", "米煞", "亞伯尼歌"], h: "因為神封住了獅子的口。"},
+                {q: "舊約最長的一卷書（章數最多）是？", a: ["詩篇", "以賽亞書", "耶利米書", "創世記"], h: "共有150篇。"},
+                {q: "「耶和華是我的牧者」出自哪一篇詩？", a: ["詩篇23篇", "詩篇1篇", "詩篇51篇", "詩篇100篇"], h: "大衛的詩。"},
+                {q: "以色列人過紅海後，在哪裡喝苦水變甜？", a: ["瑪拉", "以琳", "利非訂", "加低斯"], h: "瑪拉就是苦的意思。"},
+                {q: "誰帶領以色列人繞行耶利哥城七天？", a: ["約書亞", "摩西", "迦勒", "基甸"], h: "城牆就倒塌了。"}
+            ],
+            advanced: [ // G 模式專用題庫 (Q11-15)
+                {q: "在五經研究中，JEDP 底本說的 'P' 代表什麼？", a: ["祭司底本 (Priestly)", "預言底本", "詩歌底本", "父老底本"], h: "強調禮儀、家譜與聖潔。"},
+                {q: "死海古卷是在哪裡被發現的？", a: ["庫姆蘭 (Qumran)", "馬薩達", "耶利哥", "隱基底"], h: "1947年在死海西北岸的洞穴中。"},
+                {q: "新約文本批判中，被認為最古老且優質的抄本類型是？", a: ["亞歷山大文本", "拜占庭文本", "西方文本", "凱撒利亞文本"], h: "如西奈抄本與梵蒂岡抄本。"},
+                {q: "「保羅新觀」(New Perspective on Paul) 挑戰了傳統對哪一教義的理解？", a: ["因信稱義與律法主義", "三位一體", "神人二性", "預定論"], h: "重新評估第一世紀猶太教的本質。"},
+                {q: "在符類福音研究中，「Q」源是指什麼？", a: ["馬太與路加共有的言論資料", "馬可福音的原始版本", "彼得的口述記錄", "約翰福音的初稿"], h: "來自德文 Quelle，意為「來源」。"},
+                {q: "考古學發現的「彼拉多石碑」(Pilate Stone) 證實了什麼？", a: ["彼拉多確實是猶太巡撫", "耶穌的墳墓位置", "聖殿的建築結構", "保羅的傳教路線"], h: "這是在凱撒利亞發現的。"},
+                {q: "舊約希伯來文聖經的希臘文譯本稱為？", a: ["七十士譯本 (LXX)", "武加大譯本", "别西大譯本", "馬所拉文本"], h: "傳說由72位長老翻譯而成。"}
+            ]
+        };
+
+        // 題目生成與補充邏輯
+        function generateQuestions(category, count) {
+            // 從 banks 中複製題目，如果數量不夠則循環使用（實際應用應擴充 banks）
+            let source = banks[category] || banks['mark'];
+            let generated = [];
+            for(let i=0; i<count; i++) {
+                generated.push(source[i % source.length]);
+            }
+            return generated;
+        }
+
+        let currentStep = 0;
+        let activePool = [];
+        let locked = false;
+        let lifelines = { '5050': true, 'phone': true, 'audience': true };
+        let currentQuestion = null;
+
+        function initLadder() {
+            const container = document.getElementById('ladder-list');
+            container.innerHTML = '';
+            prizes.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.id = `step-${i}`;
+                div.className = "money-tree-item " + (i === 4 || i === 9 || i === 14 ? "milestone" : "");
+                div.innerHTML = `<span>${i+1}</span> <span>$${p.toLocaleString()}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        function startGame(mode) {
+            document.getElementById('selection-screen').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            
+            // 題庫組建邏輯
+            if (mode === 'comprehensive') {
+                // 綜合模式：Q1-5 新約常識, Q6-10 舊約歷史, Q11-15 學術
+                const p1 = [...banks.nt].sort(() => 0.5 - Math.random()).slice(0, 5);
+                const p2 = [...banks.ot].sort(() => 0.5 - Math.random()).slice(0, 5);
+                const p3 = [...banks.advanced].sort(() => 0.5 - Math.random()).slice(0, 5);
+                activePool = [...p1, ...p2, ...p3];
+            } else {
+                // 一般模式：純經文題目 (隨機選15題)
+                // 為了確保有足夠題目，這裡簡單示範重複抽取，實際應填滿 banks
+                let source = banks[mode];
+                let pool = [];
+                while(pool.length < 15) {
+                    pool = pool.concat([...source].sort(() => 0.5 - Math.random()));
+                }
+                activePool = pool.slice(0, 15);
+            }
+
+            currentStep = 0;
+            lifelines = { '5050': true, 'phone': true, 'audience': true };
+            document.querySelectorAll('.lifeline-icon').forEach(el => el.classList.remove('used'));
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            locked = false;
+            const q = activePool[currentStep];
+            currentQuestion = q;
+            
+            let catText = "";
+            if (currentStep < 5) catText = "第一階段：初級挑戰 ($1K-$8K)";
+            else if (currentStep < 10) catText = "第二階段：中級挑戰 ($10K-$200K)";
+            else catText = "第三階段：高級挑戰 ($250K-$1M)";
+            
+            document.getElementById('q-category').innerText = catText;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('feedback-area').classList.replace('opacity-100', 'opacity-0');
+
+            const options = [...q.a];
+            const correctText = options[0];
+            const shuffled = options.sort(() => 0.5 - Math.random());
+            currentQuestion.correctIndex = shuffled.indexOf(correctText);
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+            shuffled.forEach((text, i) => {
+                const btn = document.createElement('div');
+                btn.className = "option-box";
+                btn.id = `opt-${i}`;
+                btn.innerHTML = `<span class="text-[#d4af37] font-bold mr-4">${String.fromCharCode(65 + i)}:</span><span class="flex-grow text-left">${text}</span>`;
+                btn.onclick = () => checkAnswer(btn, text, correctText);
+                container.appendChild(btn);
+            });
+
+            document.querySelectorAll('.money-tree-item').forEach(el => el.classList.remove('active'));
+            const currentLadder = document.getElementById(`step-${currentStep}`);
+            if(currentLadder) {
+                currentLadder.classList.add('active');
+                currentLadder.scrollIntoView({behavior: "smooth", block: "center"});
+            }
+        }
+
+        function checkAnswer(btn, selected, correct) {
+            if (locked) return;
+            locked = true;
+            btn.classList.add('selected');
+
+            setTimeout(() => {
+                if (selected === correct) {
+                    btn.classList.replace('selected', 'correct');
+                    document.getElementById('feedback-area').innerText = "答案正確！";
+                    document.getElementById('feedback-area').classList.replace('opacity-0', 'opacity-100');
+                    setTimeout(() => {
+                        if (currentStep === 14) endGame(true);
+                        else { currentStep++; loadQuestion(); }
+                    }, 2000);
+                } else {
+                    btn.classList.replace('selected', 'wrong');
+                    document.querySelectorAll('.option-box').forEach(b => {
+                        if (b.innerText.includes(correct)) b.classList.add('correct');
+                    });
+                    setTimeout(() => endGame(false), 3000);
+                }
+            }, 1500); 
+        }
+
+        function useLifeline(type) {
+            if (!lifelines[type] || locked) return;
+            lifelines[type] = false;
+            document.getElementById(`life-${type}`).classList.add('used');
+
+            if (type === '5050') {
+                let wrong = [0,1,2,3].filter(i => i !== currentQuestion.correctIndex);
+                wrong.sort(() => 0.5 - Math.random()).slice(0, 2).forEach(idx => {
+                    document.getElementById(`opt-${idx}`).classList.add('eliminated');
+                });
+            } else if (type === 'phone') {
+                openLifelineModal('☎ 老師連線中', 
+                    `<div class="professor-bubble">「這位同學，這題經文的重點在於... <br><br><b class="text-[#d4af37]">提示：${currentQuestion.h}</b>」</div>`
+                );
+            } else if (type === 'audience') {
+                let votes = [0,0,0,0];
+                let rem = 100;
+                let correct = Math.floor(Math.random() * 25) + 55; // 觀眾正確率
+                votes[currentQuestion.correctIndex] = correct;
+                rem -= correct;
+                for(let i=0; i<4; i++) {
+                    if(i === currentQuestion.correctIndex) continue;
+                    let v = Math.floor(Math.random() * rem);
+                    votes[i] = v; rem -= v;
+                    if(i === 3 || (currentQuestion.correctIndex === 3 && i === 2)) votes[i] += rem;
+                }
+                
+                let chartHtml = `<div class="chart-bar-container w-full px-10">`;
+                ['A','B','C','D'].forEach((l, i) => {
+                    chartHtml += `<div class="chart-bar" style="height: ${votes[i]}%"><span class="chart-label">${l}</span></div>`;
+                });
+                chartHtml += `</div><p class="mt-8 text-center text-sm text-slate-400">現場觀眾投票結果</p>`;
+                openLifelineModal('👥 現場觀眾投票', chartHtml);
+            }
+        }
+
+        function openLifelineModal(title, content) {
+            document.getElementById('lifeline-title').innerText = title;
+            document.getElementById('lifeline-content').innerHTML = content;
+            document.getElementById('lifeline-modal').classList.remove('hidden');
+            document.getElementById('lifeline-modal').classList.add('flex');
+        }
+
+        function closeLifelineModal() {
+            document.getElementById('lifeline-modal').classList.add('hidden');
+        }
+
+        function endGame(win) {
+            document.getElementById('overlay').classList.remove('hidden');
+            document.getElementById('overlay').classList.add('flex');
+            document.getElementById('modal-title').innerText = win ? "百萬富翁誕生！" : "遊戲結束";
+            
+            let finalPrize = 0;
+            if (win) finalPrize = 1000000;
+            else if (currentStep >= 10) finalPrize = 200000;
+            else if (currentStep >= 5) finalPrize = 8000;
+            else finalPrize = 0;
+
+            document.getElementById('modal-prize').innerText = `$${finalPrize.toLocaleString()}`;
+            document.getElementById('modal-msg').innerText = win ? "恭喜你！你對聖經的認識令人讚嘆！" : `很遺憾，挑戰在第 ${currentStep + 1} 題結束。`;
+        }
+
+        initLadder();
+    </script>
+</body>
+</html>
