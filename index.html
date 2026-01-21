@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福音書百萬富翁</title>
+    <title>福音書百萬富翁 - 雲端爭霸版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
@@ -176,6 +176,40 @@
             position: relative; border-left: 6px solid #d4af37; 
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
+
+        /* 排行榜樣式 */
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+        }
+        .leaderboard-row:nth-child(1) { color: #fbbf24; font-weight: bold; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+        .leaderboard-row:nth-child(2) { color: #e2e8f0; }
+        .leaderboard-row:nth-child(3) { color: #b45309; }
+
+        .custom-input {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #d4af37;
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .custom-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(212,175,55,0.5);
+        }
+        
+        /* 滾動條樣式 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
     </style>
 </head>
 <body class="flex items-center justify-center">
@@ -192,33 +226,45 @@
     </audio>
 
     <!-- 全螢幕大廳 -->
-    <div id="selection-screen" class="fixed inset-0 z-50 bg-[url('https://images.unsplash.com/photo-1555696958-c5049b866f6f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center flex flex-col items-center justify-center">
+    <div id="selection-screen" class="fixed inset-0 z-50 bg-[url('https://images.unsplash.com/photo-1555696958-c5049b866f6f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center flex flex-col items-center justify-center overflow-y-auto">
         <div class="absolute inset-0 bg-gradient-to-b from-blue-950/90 via-black/95 to-black/95"></div>
         
-        <div class="relative z-10 w-full max-w-4xl px-6 py-12 flex flex-col items-center animate-fade-in text-center">
+        <div class="relative z-10 w-full max-w-4xl px-6 py-12 flex flex-col items-center animate-fade-in text-center mt-20 md:mt-0">
             <h1 class="text-5xl md:text-8xl font-black text-[#d4af37] mb-2 tracking-tighter drop-shadow-[0_4px_10px_rgba(212,175,55,0.3)]" style="font-family: 'Times New Roman', serif;">
                 GOSPELS
             </h1>
             <h2 class="text-2xl md:text-4xl text-white tracking-[0.2em] uppercase font-light mb-8 border-t border-b border-[#d4af37] py-2">
-                MILLIONAIRE
+                百萬富翁遊戲
             </h2>
             
-            <div class="bg-black/50 p-6 rounded-xl border border-white/10 mb-10 max-w-lg mx-auto backdrop-blur-sm">
-                <h3 class="text-yellow-400 font-bold mb-4 text-lg">挑戰規則</h3>
-                <ul class="text-slate-300 text-sm text-left space-y-2 list-disc pl-5">
-                    <li><strong class="text-white">Q1-5 基礎題：</strong>四福音書的常識與著名神蹟。</li>
-                    <li><strong class="text-white">Q6-10 細節題：</strong>比喻的細節、人物名字與地點。</li>
-                    <li><strong class="text-white">Q11-15 高階題：</strong>符類福音比較、約翰福音的獨特性、神學觀點。</li>
-                </ul>
-            </div>
+            <div class="flex flex-col md:flex-row gap-8 w-full">
+                <!-- 規則 -->
+                <div class="flex-1 bg-black/50 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
+                    <h3 class="text-yellow-400 font-bold mb-4 text-lg border-b border-white/20 pb-2">挑戰規則</h3>
+                    <ul class="text-slate-300 text-sm text-left space-y-3 list-disc pl-5">
+                        <li><strong class="text-white">Q1-5 基礎題：</strong>四福音書的常識與著名神蹟。</li>
+                        <li><strong class="text-white">Q6-10 細節題：</strong>比喻的細節、人物名字與地點。</li>
+                        <li><strong class="text-white">Q11-15 高階題：</strong>符類福音比較、神學觀點。</li>
+                    </ul>
+                    <button onclick="startGame()" class="w-full mt-8 px-8 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold text-xl rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(234,179,8,0.4)]">
+                        進入遊戲
+                    </button>
+                    <button onclick="toggleSound()" id="sound-btn" class="mt-4 mx-auto text-slate-500 hover:text-white text-xs flex items-center justify-center gap-2">
+                        <span>🔊</span> 背景音樂：關閉
+                    </button>
+                </div>
 
-            <button onclick="startGame()" class="px-12 py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold text-xl rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(234,179,8,0.4)]">
-                進入遊戲
-            </button>
-            
-            <button onclick="toggleSound()" id="sound-btn" class="mt-8 text-slate-500 hover:text-white text-xs flex items-center gap-2">
-                <span>🔊</span> 背景音樂：關閉
-            </button>
+                <!-- 大廳排行榜 -->
+                <div class="flex-1 bg-black/50 p-6 rounded-xl border border-white/10 backdrop-blur-sm flex flex-col h-[350px]">
+                    <h3 class="text-yellow-400 font-bold mb-2 text-lg border-b border-white/20 pb-2 flex justify-between items-center">
+                        榮譽榜 TOP 10
+                        <span class="text-xs text-slate-400 font-normal animate-pulse">● Live</span>
+                    </h3>
+                    <div id="lobby-leaderboard-list" class="flex-grow overflow-y-auto space-y-1 pr-2">
+                        <div class="text-center text-slate-500 mt-10">載入中...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -289,25 +335,49 @@
 
         </div>
 
-        <!-- 右側：獎金階梯 (電腦版顯示) -->
-        <div class="lg:w-64 w-full flex-shrink-0 hidden lg:block">
-            <div class="bg-black/60 border-2 border-[#4b5563] rounded-xl p-4 h-full flex flex-col justify-center shadow-xl">
-                <div id="ladder-list" class="flex flex-col-reverse w-full ladder-container gap-1"></div>
+        <!-- 右側：獎金階梯 + 迷你排行榜 (電腦版顯示) -->
+        <div class="lg:w-72 w-full flex-shrink-0 hidden lg:flex flex-col gap-4">
+            <!-- 獎金階梯 -->
+            <div class="bg-black/60 border-2 border-[#4b5563] rounded-xl p-4 flex-1 flex flex-col shadow-xl overflow-hidden">
+                <h4 class="text-center text-slate-400 text-xs mb-2 border-b border-white/10 pb-1">獎金階梯</h4>
+                <div id="ladder-list" class="flex flex-col-reverse w-full ladder-container gap-1 overflow-y-auto"></div>
+            </div>
+            
+            <!-- 側邊排行榜 -->
+            <div class="bg-black/60 border-2 border-[#4b5563] rounded-xl p-4 h-1/3 flex flex-col shadow-xl">
+                <h4 class="text-center text-yellow-500 text-xs mb-2 border-b border-white/10 pb-1 font-bold">即時排行</h4>
+                <div id="side-leaderboard-list" class="flex-grow overflow-y-auto space-y-1 text-xs">
+                    <!-- JS Fill -->
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- 結算彈窗 -->
+    <!-- 結算彈窗 (整合 Score Input) -->
     <div id="overlay" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-6">
         <div class="bg-gradient-to-b from-[#0f0c29] to-[#302b63] border-2 border-[#d4af37] p-10 rounded-3xl max-w-md w-full text-center shadow-[0_0_50px_rgba(212,175,55,0.2)]">
             <h2 id="modal-title" class="text-3xl font-bold mb-4 text-[#d4af37]"></h2>
-            <p id="modal-msg" class="text-white mb-8 text-lg leading-relaxed"></p>
-            <div class="bg-black/40 p-6 rounded-xl mb-8 border border-white/10">
+            <p id="modal-msg" class="text-white mb-6 text-lg leading-relaxed"></p>
+            
+            <div class="bg-black/40 p-6 rounded-xl mb-6 border border-white/10">
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">最終獎金</p>
-                <p id="modal-prize" class="text-5xl font-black text-white font-mono"></p>
+                <p id="modal-prize" class="text-5xl font-black text-white font-mono mb-4"></p>
+                
+                <!-- 儲存分數表單 -->
+                <div id="save-score-section" class="pt-4 border-t border-white/10">
+                    <p class="text-xs text-yellow-200 mb-2">留名青史</p>
+                    <input type="text" id="player-name" class="custom-input" placeholder="輸入您的名字" maxlength="10">
+                    <button onclick="submitScore()" id="submit-score-btn" class="w-full py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors shadow-lg">
+                        儲存成績
+                    </button>
+                    <p id="save-status" class="text-xs mt-2 h-4 text-emerald-400"></p>
+                </div>
             </div>
-            <button onclick="location.reload()" class="w-full py-4 bg-[#d4af37] text-black font-bold rounded-full hover:bg-yellow-400 transition-all shadow-lg hover:shadow-yellow-500/20">下一位參賽者</button>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-[#d4af37] text-black font-bold rounded-full hover:bg-yellow-400 transition-all shadow-lg hover:shadow-yellow-500/20">
+                再來一局
+            </button>
         </div>
     </div>
 
@@ -320,12 +390,36 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // --- Firebase Integration ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjFUX0-ak1yXcsGzoFyCDnEgGuGNlzCgs",
+            authDomain: "asiu2026.firebaseapp.com",
+            projectId: "asiu2026",
+            storageBucket: "asiu2026.firebasestorage.app",
+            messagingSenderId: "624265912622",
+            appId: "1:624265912622:web:c579731de5a189070f1abf"
+        };
+
+        let db;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log("Firebase initialized successfully");
+            initLeaderboardListener();
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            document.getElementById('lobby-leaderboard-list').innerHTML = '<p class="text-red-400 text-sm">無法連線至排行榜服務</p>';
+        }
+
+        // --- Game Engine Logic ---
+        
         const prizes = [1000, 2000, 4000, 6000, 8000, 10000, 20000, 50000, 100000, 200000, 250000, 400000, 600000, 800000, 1000000];
         
-        // 分級題庫：福音書專場
         const questionData = {
-            // Q1-Q5: 基礎常識 (人物、地點、著名故事)
             easy: [
                 {q: "耶穌在伯利恆出生時，誰從東方來朝拜他？", a: ["幾位博士", "牧羊人", "大希律王", "西面"], h: "他們看見了他的星，並帶來了禮物。", r: "馬太福音 2:1"},
                 {q: "耶穌在約旦河受洗時，聖靈彷彿什麼降在他身上？", a: ["鴿子", "火焰", "雲彩", "風"], h: "這是一種溫馴的鳥類。", r: "馬太福音 3:16"},
@@ -345,10 +439,9 @@
                 {q: "誰在十字架下說：「這人真是神的兒子！」？", a: ["百夫長", "彼拉多", "彼得", "馬利亞"], h: "這是一位羅馬軍官。", r: "馬可福音 15:39"},
                 {q: "耶穌在哪裡平靜風浪？", a: ["加利利海", "死海", "紅海", "地中海"], h: "門徒懼怕說：這到底是誰？", r: "馬可福音 4:39"},
                 {q: "誰被斬了頭放在盤子裡？", a: ["施洗約翰", "司提反", "雅各", "保羅"], h: "因為希羅底的女兒跳舞。", r: "馬太福音 14:8"},
-                {q: "稅吏馬太（利未）是在哪裡被呼召的？", a: ["稅關上", "聖殿裡", "漁船上", "家裡"], h: "耶穌說：你跟從我來。", r: "馬太福音 9:9"},
+                {q: "馬太（利未）是在哪裡被呼召的？", a: ["稅關上", "聖殿裡", "漁船上", "家裡"], h: "耶穌說：你跟從我來。", r: "馬太福音 9:9"},
                 {q: "耶穌在哪裡被釘十字架？", a: ["各各他", "橄欖山", "錫安山", "西奈山"], h: "意思是「骷髏地」。", r: "約翰福音 19:17"}
             ],
-            // Q6-Q10: 細節與進階經文 (比喻細節、特定言論、地點)
             medium: [
                 {q: "誰爬上桑樹要看耶穌？", a: ["撒該", "尼哥底母", "巴底買", "拉撒路"], h: "他是個稅吏長，身量矮小。", r: "路加福音 19:2-4"},
                 {q: "浪子回頭的比喻中，父親給了小兒子什麼？", a: ["袍子、戒指、鞋", "大筆財產", "一頓責罵", "新的僕人"], h: "還宰了肥牛犢慶祝。", r: "路加福音 15:22"},
@@ -368,10 +461,9 @@
                 {q: "耶穌說：「你們若不回轉，變成...的樣式，斷不得進天國」？", a: ["小孩子", "天使", "義人", "僕人"], h: "謙卑像這小孩子的。", r: "馬太福音 18:3"},
                 {q: "耶穌治好了幾個大痲瘋病人，只有一個回來感恩？", a: ["10個", "12個", "7個", "5個"], h: "那人是撒瑪利亞人。", r: "路加福音 17:17"},
                 {q: "誰說：「主啊，你洗我的腳嗎？」", a: ["彼得", "約翰", "雅各", "猶大"], h: "耶穌說：我所做的，你如今不知道。", r: "約翰福音 13:6"},
-                {q: "耶穌在十字架上將母親託付給誰？", a: ["愛徒約翰", "彼得", "雅各", "約瑟"], h: "看，你的母親！", r: "約翰福音 19:26-27"},
+                {q: "耶穌在十字架上將母親託付給誰？", a: ["約翰", "彼得", "雅各", "約瑟"], h: "看，你的母親！", r: "約翰福音 19:26-27"},
                 {q: "耶穌說：「你們要防備法利賽人的...」？", a: ["酵", "教訓", "衣服", "食物"], h: "指他們的假冒為善。", r: "路加福音 12:1"}
             ],
-            // Q11-Q15: 高階比較與神學 (福音書差異、獨有記載、神學意義)
             hard: [
                 {q: "哪卷福音書記載了「七句十架七言」中的三句，包括「今日你要同我在樂園裡了」？", a: ["路加福音", "馬太福音", "馬可福音", "約翰福音"], h: "路加特別強調耶穌對罪人的憐憫。", r: "路加福音 23:43"},
                 {q: "在符類福音中，哪一卷書沒有記載「主禱文」？", a: ["馬可福音", "馬太福音", "路加福音", "都有記載"], h: "馬可福音是最短的，著重於行動。", r: "馬可福音"},
@@ -397,7 +489,6 @@
         };
 
         function generateQuestions() {
-            // 從三個難度各抽 5 題
             const easy = [...questionData.easy].sort(() => 0.5 - Math.random()).slice(0, 5);
             const medium = [...questionData.medium].sort(() => 0.5 - Math.random()).slice(0, 5);
             const hard = [...questionData.hard].sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -410,6 +501,7 @@
         let lifelines = { '5050': true, 'phone': true, 'audience': true };
         let currentQuestion = null;
         let isSoundOn = false;
+        let finalScore = 0;
 
         function toggleSound() {
             isSoundOn = !isSoundOn;
@@ -440,10 +532,12 @@
         function startGame() {
             document.getElementById('selection-screen').classList.add('hidden');
             document.getElementById('main-interface').classList.remove('hidden');
+            document.getElementById('main-interface').classList.add('flex'); // Ensure flex is added
             document.getElementById('game-area').classList.remove('hidden');
             
             activePool = generateQuestions();
             currentStep = 0;
+            finalScore = 0;
             lifelines = { '5050': true, 'phone': true, 'audience': true };
             document.querySelectorAll('.lifeline-icon').forEach(el => el.classList.remove('used'));
             
@@ -570,12 +664,14 @@
         function cashOut() {
             if (locked) return;
             const currentPrize = currentStep > 0 ? prizes[currentStep - 1] : 0;
+            finalScore = currentPrize;
             
             document.getElementById('overlay').classList.remove('hidden');
             document.getElementById('overlay').classList.add('flex');
             document.getElementById('modal-title').innerText = "明智的決定！";
             document.getElementById('modal-msg').innerText = "您選擇帶著獎金離開。";
             document.getElementById('modal-prize').innerText = `$${currentPrize.toLocaleString()}`;
+            resetSaveScoreForm();
         }
 
         function useLifeline(type) {
@@ -593,15 +689,13 @@
                     `<div class="pastor-bubble">「這位弟兄/姊妹，這題經文的重點在於... <br><br><b class="text-[#d4af37]">牧師提示：${currentQuestion.h}</b>」</div>`
                 );
             } else if (type === 'audience') {
-                // 調整觀眾智慧：難度越高，觀眾越不準確
                 let accuracyBase = 80; 
-                if (currentStep >= 5) accuracyBase = 55; // 中等題 55%
-                if (currentStep >= 10) accuracyBase = 35; // 高階題 35% (觀眾開始亂猜)
+                if (currentStep >= 5) accuracyBase = 55;
+                if (currentStep >= 10) accuracyBase = 35;
 
                 let votes = [0,0,0,0];
                 let rem = 100;
                 
-                // 正確答案票數
                 let correctVotes = Math.floor(Math.random() * 20) + accuracyBase; 
                 if(correctVotes > 90) correctVotes = 90;
                 
@@ -644,17 +738,123 @@
             document.getElementById('overlay').classList.add('flex');
             document.getElementById('modal-title').innerText = win ? "百萬富翁誕生！" : "遊戲結束";
             
-            let finalPrize = 0;
-            if (win) finalPrize = 1000000;
-            else if (currentStep >= 10) finalPrize = 200000;
-            else if (currentStep >= 5) finalPrize = 8000;
-            else finalPrize = 0;
+            if (win) finalScore = 1000000;
+            else if (currentStep >= 10) finalScore = 200000;
+            else if (currentStep >= 5) finalScore = 8000;
+            else finalScore = 0;
 
-            document.getElementById('modal-prize').innerText = `$${finalPrize.toLocaleString()}`;
+            document.getElementById('modal-prize').innerText = `$${finalScore.toLocaleString()}`;
             document.getElementById('modal-msg').innerText = win ? "恭喜你！你對福音書的認識令人讚嘆！" : `很遺憾，挑戰在第 ${currentStep + 1} 題結束。`;
+            resetSaveScoreForm();
         }
 
+        function resetSaveScoreForm() {
+            document.getElementById('save-score-section').style.display = 'block';
+            document.getElementById('player-name').value = '';
+            document.getElementById('save-status').innerText = '';
+            document.getElementById('submit-score-btn').disabled = false;
+            document.getElementById('submit-score-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            if (finalScore === 0) {
+                 document.getElementById('save-score-section').style.display = 'none';
+            }
+        }
+
+        // --- Firebase Leaderboard Logic ---
+
+        function initLeaderboardListener() {
+            if(!db) return;
+            const q = query(collection(db, "gospel_scores"), orderBy("score", "desc"), limit(10));
+            
+            onSnapshot(q, (querySnapshot) => {
+                const scores = [];
+                querySnapshot.forEach((doc) => {
+                    scores.push(doc.data());
+                });
+                renderLeaderboards(scores);
+            }, (error) => {
+                console.error("Leaderboard error:", error);
+            });
+        }
+
+        function renderLeaderboards(scores) {
+            const html = scores.map((s, index) => `
+                <div class="leaderboard-row">
+                    <span class="w-8 text-center">${index + 1}</span>
+                    <span class="flex-grow text-left pl-4 truncate">${escapeHtml(s.name)}</span>
+                    <span class="font-mono text-right">$${s.score.toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            const lobbyList = document.getElementById('lobby-leaderboard-list');
+            const sideList = document.getElementById('side-leaderboard-list');
+
+            if(lobbyList) lobbyList.innerHTML = html || '<div class="text-center text-slate-500 mt-4">尚無紀錄，快來挑戰！</div>';
+            if(sideList) sideList.innerHTML = html || '<div class="text-center text-slate-500 mt-2">尚無紀錄</div>';
+        }
+
+        async function submitScore() {
+            if(!db) {
+                alert("資料庫尚未連線");
+                return;
+            }
+
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value.trim();
+            const btn = document.getElementById('submit-score-btn');
+            const status = document.getElementById('save-status');
+
+            if (!name) {
+                status.innerText = "請輸入名字！";
+                status.classList.add('text-red-400');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            status.innerText = "儲存中...";
+            status.classList.remove('text-red-400');
+
+            try {
+                await addDoc(collection(db, "gospel_scores"), {
+                    name: name,
+                    score: finalScore,
+                    timestamp: serverTimestamp()
+                });
+                status.innerText = "儲存成功！";
+                status.classList.add('text-emerald-400');
+                document.getElementById('save-score-section').style.display = 'none';
+            } catch (e) {
+                console.error("Error adding score: ", e);
+                status.innerText = "儲存失敗，請稍後再試。";
+                status.classList.add('text-red-400');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- Expose functions to window for HTML onclick events ---
+        window.toggleSound = toggleSound;
+        window.startGame = startGame;
+        window.checkAnswer = checkAnswer;
+        window.cashOut = cashOut;
+        window.useLifeline = useLifeline;
+        window.closeLifelineModal = closeLifelineModal;
+        window.submitScore = submitScore;
+
+        // Init
         initLadder();
+
     </script>
 </body>
 </html>
